@@ -34,14 +34,14 @@ VALUES
 
 SELECT * FROM EmployeeDetail
 
-Q1(a): Find the list of employees whose salary ranges between 2L to 3L
+---Q1(a): Find the list of employees whose salary ranges between 2L to 3L-----------
 
 SELECT empname, salary FROM employee
 WHERE salary > 200000 AND  salary < 300000
 
 *******************************************************************************
 
-Q1(b): Write a query to retrieve the list of employees from the same city
+---Q1(b): Write a query to retrieve the list of employees from the same city----
 
 SELECT E1.empid, E1.empname, E1.city
 FROM Employee E1, Employee E2
@@ -59,7 +59,7 @@ FROM employee
 
 *****************************************************************************************
 
-Q2(b): What’s the male and female employees ratio
+-----Q2(b): What’s the male and female employees ratio------------
 
 SELECT 
 (COUNT (*) FILTER (WHERE gender = 'M') * 100.0 / COUNT (*)) AS MaleRatio,
@@ -68,14 +68,14 @@ FROM employee
 
 *****************************************************************************************
 
-Q2(c): Write a query to fetch 50% records from the Employee table.
+-----Q2(c): Write a query to fetch 50% records from the Employee table.
 
 SELECT * FROM employee
 WHERE empid <= (SELECT(count(empid)/2) FROM Employee)
 
 *******************************************************************************************
 
-Q3: Query to fetch the employee’s salary but replace the LAST 2 digits with ‘XX’  
+-----Q3: Query to fetch the employee’s salary but replace the LAST 2 digits with ‘XX’  
 i.e12345 will be 123XX
 
 SELECT * FROM employee
@@ -97,7 +97,7 @@ FROM Employee
 
 *****************************************************************************************
 
-Q4: Write a query to fetch even and odd rows from Employee table.
+-----Q4: Write a query to fetch even and odd rows from Employee table.
 
 ---Fetch Even rows
 
@@ -113,7 +113,7 @@ WHERE Emp.rownumber % 2 = 1
 
 *************************************************************************************
 
-Q5(a): Write a query to find all the Employee names whose name:
+-----Q5(a): Write a query to find all the Employee names whose name:
 • Begin with ‘A’
 • Contains ‘A’ alphabet at second place
 • Contains ‘Y’ alphabet at second last place
@@ -135,7 +135,7 @@ SELECT * FROM employee WHERE empname LIKE 'V%a';
 
 
 
-Q5(b): Write a query to find the list of Employee names which is:
+-----Q5(b): Write a query to find the list of Employee names which is:
 • starting with vowels (a, e, i, o, or u), without duplicates
 • ending with vowels (a, e, i, o, or u), without duplicates
 • starting & ending with vowels (a, e, i, o, or u), without duplicates
@@ -151,7 +151,7 @@ SELECT DISTINCT empname FROM employee WHERE LOWER (empname) SIMILAR TO '[aeiou]%
 ******************************************************************************************
 
 
-Q6: Find Nth highest salary from employee table with and without using the
+----Q6: Find Nth highest salary from employee table with and without using the
 TOP/LIMIT keywords.
 
 
@@ -208,7 +208,7 @@ FROM Employee
 
 SELECT * FROM employee
 
-Q7(a): Write a query to find and remove duplicate records from a table.
+----Q7(a): Write a query to find and remove duplicate records from a table.
 
 
 SELECT empid, empname, gender, salary , city, 
@@ -226,7 +226,7 @@ HAVING COUNT (*)>1)
 **************************************************************************************************
 
 
- Q7(b): Query to retrieve the list of employees working in same project.
+----Q7(b): Query to retrieve the list of employees working in same project.
 
 SELECT * FROM employee
 
@@ -244,14 +244,90 @@ FROM CTE c1, CTE c2
 WHERE c1.project = c2.project AND c1.empid != c2.empid AND c1.empid < c2.empid
 
 
-Q8: Show the employee with the highest salary for each project
+**********************************************************************************************************
+
+----Q8: Show the employee with the highest salary for each project
+
+	
+SELECT ed.project, MAX(e.salary) AS ProjectSal
+	FROM Employee AS e
+	JOIN employeedetail AS ed
+	ON e.empid = ed.empid
+	GROUP BY project
+	ORDER  BY ProjectSal DESC;
+
+------Similarly we can find total salary for each project , just use SUM() instead of MAX() 
+
+SELECT ed.project, SUM(e.salary) AS ProjectSal
+	FROM Employee AS e
+	JOIN employeedetail AS ed
+	ON e.empid = ed.empid
+	GROUP BY project
+	ORDER  BY ProjectSal DESC;
+
+*********************************************************************************************
+
+----Alternative, more dynamic solution: here you can fetch EmpName, 2nd/3rd highest value, etc
+
+WITH CTE AS
+	(SELECT Project, empname,salary,
+	ROW_NUMBER() OVER (PARTITION BY project ORDER BY salary DESC) AS row_rank 
+	FROM employee AS e 
+	INNER JOIN employeedetail AS ed
+	ON e.empid = ed.empid)
+SELECT project, empname, salary
+FROM CTE
+WHERE row_rank = 1;
+
+
+*****************************************************************************************************
+
+-----Q9: Query to find the total count of employees joined each year
+
+SELECT EXTRACT('year'FROM doj) AS JoinYear, COUNT(*) AS EmpCount
+FROM Employee AS e
+INNER JOIN Employeedetail AS ed 
+ON e.empid = e.empid
+GROUP BY joinyear
+ORDER BY joinyear ASC
+
+
+*******************************************************************************************************
+
+
+----Q10: Create 3 groups based on salary col, salary less than 1L is low, between 1 -
+2L is medium and above 2L is High
+
+SELECT Empname, Salary,
+	CASE
+		WHEN Salary > 200000 THEN 'High'
+		WHEN Salary >= 100000 AND Salary <= 200000 THEN 'Medium'
+		ELSE 'Low'
+	END AS SalaryStatus
+FROM Employee
+
+
+
+****************************************************************************************************
+
+
+
+----Q11 : Query to pivot the data in the Employee table and retrieve the total
+salary for each city.
+The result should display the EmpID, EmpName, and separate columns for each city
+(Mathura, Pune, Delhi), containing the corresponding total salary.
 
 
 
 
-
-
-
+SELECT
+EmpID,
+EmpName,
+SUM(CASE WHEN City = 'Mathura' THEN Salary END) AS "Mathura",
+SUM(CASE WHEN City = 'Pune' THEN Salary END) AS "Pune",
+SUM(CASE WHEN City = 'Delhi' THEN Salary END) AS "Delhi"
+FROM Employee
+GROUP BY EmpID, EmpName;
 
 
 
